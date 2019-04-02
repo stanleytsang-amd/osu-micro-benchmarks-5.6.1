@@ -147,7 +147,7 @@ enum mpi_req{
 #define OSHM_LOOP_LARGE_MR 50
 #define OSHM_LOOP_ATOMIC 500
 
-#define MAX_MESSAGE_SIZE (1 << 22)
+#define MAX_MESSAGE_SIZE (1 << 27)
 #define MAX_MSG_SIZE_PT2PT (1<<20)
 #define MAX_MSG_SIZE_COLL (1<<20)
 #define MIN_MESSAGE_SIZE 1
@@ -263,6 +263,8 @@ struct options_t {
     int window_varied;
     int print_rate;
     int pairs;
+    int srcgid;
+    int dstgid;
 };
 
 struct bad_usage_t{

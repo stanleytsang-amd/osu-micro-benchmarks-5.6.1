@@ -222,8 +222,8 @@ set_threads (char *val_str)
                 return retval;
             }
             retval = set_receiver_threads(atoi(val2));
-        } 
-        
+        }
+
     }
 
     return retval;
@@ -342,7 +342,7 @@ int process_options (int argc, char *argv[])
             {"print-rate",      required_argument,  0,  'R'},
             {"num-pairs",       required_argument,  0,  'p'},
             {"vary-window",     required_argument,  0,  'V'}
-            
+
     };
 
     enable_accel_support();
@@ -485,14 +485,14 @@ int process_options (int argc, char *argv[])
                         return PO_BAD_USAGE;
                     }
                 } else if (options.bench == PT2PT) {
-            
+
                     if(set_threads(optarg)){
                         bad_usage.message = "Invalid Number of Threads";
                         bad_usage.optarg = optarg;
 
                         return PO_BAD_USAGE;
                     }
-                    
+
                 }
                 break;
             case 'i':
@@ -649,7 +649,35 @@ int process_options (int argc, char *argv[])
                 setAccel(options.src);
                 setAccel(options.dst);
             }
-        } else if (optind != argc) {
+        } else if ((optind + 4) == argc) {
+            options.src = argv[optind][0];
+            options.dst = argv[optind + 1][0];
+            options.srcgid = atoi(argv[optind+2]);//set the src gpu id
+            options.dstgid = atoi(argv[optind+3]);//set the dst gpu id
+
+            switch (options.src) {
+                case 'D':
+                case 'H':
+                case 'M':
+                case 'P':
+                case 'R':
+                    break;
+                default:
+                    return PO_BAD_USAGE;
+            }
+
+            switch (options.dst) {
+                case 'D':
+                case 'H':
+                case 'M':
+                case 'P':
+                case 'R':
+                    break;
+                default:
+                    return PO_BAD_USAGE;
+            }
+        }
+        else if (optind != argc) {
             return PO_BAD_USAGE;
         }
     }
