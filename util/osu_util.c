@@ -24,6 +24,19 @@ struct options_t options;
 
 struct bad_usage_t bad_usage;
 
+char* make_memory_label(char memory_type)
+{
+    switch (memory_type) {
+        case 'M':
+            return "MANAGED (M)";
+        case 'D':
+            return "DEVICE (D)";
+        case 'P':
+            return "PINNED (P)";
+    }
+    return "HOST (H)";
+}
+
 void
 print_header(int rank, int full)
 {
@@ -47,8 +60,7 @@ print_header(int rank, int full)
                     case CUDA:
                     case OPENACC:
                         fprintf(stdout, "# Send Buffer on %s and Receive Buffer on %s\n",
-                               'M' == options.src ? "MANAGED (M)" : ('D' == options.src ? "DEVICE (D)" : "HOST (H)"),
-                               'M' == options.dst ? "MANAGED (M)" : ('D' == options.dst ? "DEVICE (D)" : "HOST (H)"));
+                               make_memory_label(options.src), make_memory_label(options.dst));
                     default:
                         if (options.subtype == BW && options.bench != MBW_MR) {
                             fprintf(stdout, "%-*s%*s\n", 10, "# Size", FIELD_WIDTH, "Bandwidth (MB/s)");

@@ -92,10 +92,7 @@ int free_device_buffer (void * buf)
     switch (options.accel) {
 #ifdef _ENABLE_CUDA_
         case CUDA:
-            if (options.src == 'P')
-                CUDA_CHECK(cudaFreeHost(buf));
-            else
-                CUDA_CHECK(cudaFree(buf));
+            CUDA_CHECK(cudaFree(buf));
             break;
 #endif
 #ifdef _ENABLE_OPENACC_
@@ -108,6 +105,26 @@ int free_device_buffer (void * buf)
             return 1;
     }
 
+    buf = NULL;
+    return 0;
+}
+
+int free_pinned_buffer(void * buf)
+{
+    switch (options.accel) {
+#ifdef _ENABLE_CUDA_
+        case CUDA:
+                CUDA_CHECK(cudaFreeHost(buf));
+            break;
+#endif
+#ifdef _ENABLE_OPENACC_
+        case OPENACC:
+        return 1;
+#endif
+        default:
+            /* unknown device */
+            return 1;
+    }
     buf = NULL;
     return 0;
 }
@@ -806,7 +823,6 @@ int allocate_pinned_buffer (char ** buffer)
     switch (options.accel) {
 #ifdef _ENABLE_CUDA_
         case CUDA:
-             printf("allocating pinned memory\n");
              CUDA_CHECK(cudaMallocHost((void **)buffer, options.max_message_size));
             break;
 #endif
@@ -1002,12 +1018,12 @@ int allocate_memory_pt2pt (char ** sbuf, char ** rbuf, int rank)
                 }
             } else if ('P' == options.src) {
                 if (allocate_pinned_buffer(sbuf)) {
-                    fprintf(stderr, "Error allocating cuda unified memory\n");
+                    fprintf(stderr, "Error allocating cuda pinned memory\n");
                     return 1;
                 }
 
                 if (allocate_pinned_buffer(rbuf)) {
-                    fprintf(stderr, "Error allocating cuda unified memory\n");
+                    fprintf(stderr, "Error allocating cuda pinned memory\n");
                     return 1;
                 }
             } else {
@@ -1041,6 +1057,16 @@ int allocate_memory_pt2pt (char ** sbuf, char ** rbuf, int rank)
 
                 if (allocate_managed_buffer(rbuf)) {
                     fprintf(stderr, "Error allocating cuda unified memory\n");
+                    return 1;
+                }
+            } else if ('P' == options.dst) {
+                if (allocate_pinned_buffer(sbuf)) {
+                    fprintf(stderr, "Error allocating cuda pinned memory\n");
+                    return 1;
+                }
+
+                if (allocate_pinned_buffer(rbuf)) {
+                    fprintf(stderr, "Error allocating cuda pinned memory\n");
                     return 1;
                 }
             } else {
@@ -1305,18 +1331,25 @@ void free_memory (void * sbuf, void * rbuf, int rank)
 {
     switch (rank) {
         case 0:
-            if ('D' == options.src || 'M' == options.src || 'P' == options.src) {
+            if ('D' == options.src || 'M' == options.src) {
                 free_device_buffer(sbuf);
                 free_device_buffer(rbuf);
-            } else {
+            } else if ('P' == options.src) {
+                free_pinned_buffer(sbuf);
+                free_pinned_buffer(rbuf);
+            }
+            else {
                 free(sbuf);
                 free(rbuf);
             }
             break;
         case 1:
-            if ('D' == options.dst || 'M' == options.dst || 'P' == options.src) {
+            if ('D' == options.dst || 'M' == options.dst) {
                 free_device_buffer(sbuf);
                 free_device_buffer(rbuf);
+            } else if ('P' == options.src) {
+                free_pinned_buffer(sbuf);
+                free_pinned_buffer(rbuf);
             } else {
                 free(sbuf);
                 free(rbuf);

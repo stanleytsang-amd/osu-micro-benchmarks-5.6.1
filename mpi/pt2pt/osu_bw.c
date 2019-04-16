@@ -61,11 +61,6 @@ int main (int argc, char *argv[])
     }
 
     if (0 == myid) {
-#ifdef _ENABLE_CUDA_
-        int dev;
-        cudaGetDevice(&dev);
-        printf("Rank 0 device id: %d\n", dev);
-#endif
         switch (po_ret) {
             case PO_CUDA_NOT_AVAIL:
                 fprintf(stderr, "CUDA support not enabled.  Please recompile "
@@ -89,14 +84,7 @@ int main (int argc, char *argv[])
                 break;
         }
     }
-    else
-    {
-#ifdef _ENABLE_CUDA_
-        int dev;
-        cudaGetDevice(&dev);
-        printf("Rank 1 device id: %d\n", dev);
-#endif
-    }
+
     switch (po_ret) {
         case PO_CUDA_NOT_AVAIL:
         case PO_OPENACC_NOT_AVAIL:
